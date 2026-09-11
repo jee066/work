@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🎮 ตู้เกมอาร์เคดพกพา (Mini Arcade Bar)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    :root {
+      --bg: #0b0e14;
+      --card: #151922;
+      --border: #242b38;
+      --accent: #ff4757;
+      --gold: #ffa502;
+      --green: #2ed573;
+      --blue: #1e90ff;
+      --text: #f1f2f6;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    /* ─── ARCADE HEADER ─── */
+    header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #1e90ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+    }
+    header p {
+      font-size: 13px;
+      color: #a4b0be;
+      margin-top: 4px;
+    }
+
+    /* ─── GAME NAV TABS ─── */
+    .game-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .game-tab {
+      padding: 10px 18px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .game-tab:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+    }
+    .game-tab.active {
+      background: linear-gradient(135deg, #ff4757, #ff6b81);
+      border-color: #ff4757;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    }
+
+    /* ─── ARCADE CABINET SCREEN ─── */
+    .arcade-machine {
+      width: 100%;
+      max-width: 540px;
+      background: #11141c;
+      border: 3px solid #2f3640;
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .screen-container {
+      width: 100%;
+      height: 400px;
+      background: #000;
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      border: 2px solid #2f3542;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    /* ─── GAME 1: FLAPPY DRAGON ─── */
+    #canvas-flappy {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #1e3799;
+    }
+
+    /* ─── GAME 2: POP-A-MOLE ─── */
+    #mole-game {
+      width: 100%;
+      height: 100%;
+      background: #2ed573;
+      background: radial-gradient(circle, #2ed573 0%, #10ac84 100%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    .mole-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .mole-hole {
+      width: 85px;
+      height: 85px;
+      background: #574b90;
+      border: 4px solid #303952;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: inset 0 10px 15px rgba(0,0,0,0.6);
+      margin: 0 auto;
+    }
+    .mole {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      transition: top 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .mole.up {
+      top: 0;
+    }
+
+    /* ─── GAME 3: SPEED CLICK ─── */
+    #clicker-game {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, #2f3542 0%, #000 100%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .big-click-btn {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff4757, #ff6b81);
+      border: 6px solid #fff;
+      color: #fff;
+      font-size: 26px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 12px 0 #b33939, 0 16px 25px rgba(255, 71, 87, 0.4);
+      transition: all 0.05s;
+    }
+    .big-click-btn:active {
+      transform: translateY(10px);
+      box-shadow: 0 2px 0 #b33939, 0 6px 15px rgba(255, 71, 87, 0.4);
+    }
+
+    /* ─── GAME OVERLAY (HUD) ─── */
+    .hud-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    .score-tag {
+      background: #222733;
+      padding: 6px 14px;
+      border-radius: 12px;
+      border: 1px solid #343f53;
+      color: var(--gold);
+    }
+    .btn-restart {
+      background: #2ed573;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .center-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 20;
+    }
+    .center-overlay h2 {
+      font-size: 28px;
+      color: #ff4757;
+      text-shadow: 0 0 10px #ff4757;
+    }
+    .start-btn {
+      padding: 12px 28px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2ed573, #10ac84);
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(46, 213, 115, 0.4);
+      transition: transform 0.1s;
+    }
+    .start-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* ─── ARCADE BUTTONS DECORATION ─── */
+    .arcade-controls {
+      display: flex;
+      gap: 14px;
+      margin-top: 18px;
+      align-items: center;
+    }
+    .deco-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+    }
+    .deco-red { background: #ff4757; }
+    .deco-yellow { background: #ffa502; }
+    .deco-blue { background: #1e90ff; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🕹️ ตู้มินิเกมอาร์เคด (Mini Arcade)</h1>
+    <p>เกมสนุกๆ เล่นง่าย จบไว เล่นเพลินแก้เบื่อ!</p>
+  </header>
+
+  <!-- Game Selector -->
+  <div class="game-tabs">
+    <button class="game-tab active" onclick="switchGame('flappy')">🚀 ตะลุยอวกาศ (Flappy)</button>
+    <button class="game-tab" onclick="switchGame('mole')">🐹 ตีตัวตุ่น (Whack-a-Mole)</button>
+    <button class="game-tab" onclick="switchGame('click')">⚡ วัดความเร็วนิ้ว (CPS Test)</button>
+  </div>
+
+  <div class="arcade-machine">
+    <!-- HUD Header -->
+    <div class="hud-bar">
+      <span class="score-tag" id="hud-score">คะแนน: 0</span>
+      <span class="score-tag" id="hud-high">สูงสุด: 0</span>
+    </div>
+
+    <!-- Screen -->
+    <div class="screen-container">
+
+      <!-- 1. FLAPPY SPACE -->
+      <canvas id="canvas-flappy"></canvas>
+
+      <!-- 2. WHACK A MOLE -->
+      <div id="mole-game">
+        <div class="mole-grid">
+          <div class="mole-hole" onclick="hitMole(0)"><div class="mole" id="m0">🐹</div></div>
+          <div class="mole-hole" onclick="hitMole(1)"><div class="mole" id="m1">🐹</div></div>
+          <div class="mole-hole" onclick="hitMole(2)"><div class="mole" id="m2">🐹</div></div>
+          <div class="mole-hole" onclick="hitMole(3)"><div class="mole" id="m3">🐹</div></div>
+          <div class="mole-hole" onclick="hitMole(4)"><div class="mole" id="m4">🐹</div></div>
+          <div class="mole-hole" onclick="hitMole(5)"><div class="mole" id="m5">🐹</div></div>
+        </div>
+      </div>
+
+      <!-- 3. SPEED CLICK -->
+      <div id="clicker-game">
+        <div style="font-size: 14px; color: #ced6e0;">กดให้เร็วที่สุดภายใน 10 วินาที!</div>
+        <button class="big-click-btn" id="cps-btn" onclick="onClickCPS()">CLICK!</button>
+        <div style="font-size: 16px; font-weight: bold; color: var(--gold);" id="cps-timer">เวลาเหลือ: 10.0s</div>
+      </div>
+
+      <!-- Overlay Screen for Start / GameOver -->
+      <div class="center-overlay" id="screen-overlay">
+        <h2 id="overlay-title">พร้อมหรือยัง?</h2>
+        <p style="font-size: 13px; color: #ced6e0;" id="overlay-desc">คลิกหรือกด Spacebar เพื่อเริ่มเล่น</p>
+        <button class="start-btn" onclick="startGame()">▶ เริ่มเล่นเลย</button>
+      </div>
+
+    </div>
+
+    <!-- Arcade Cabinet Deco Buttons -->
+    <div class="arcade-controls">
+      <div class="deco-btn deco-red"></div>
+      <div class="deco-btn deco-yellow"></div>
+      <div class="deco-btn deco-blue"></div>
+      <span style="font-size: 11px; color: #57606f; margin-left: 8px;">INSERT COIN TO PLAY</span>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════
+       SOUND ENGINE (Web Audio API)
+       ═══════════════════════════════════════ */
+    let actx = null;
+    function initSound() {
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+    }
+
+    function soundJump() {
+      initSound();
+      try {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(220, actx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(580, actx.currentTime + 0.12);
+        g.gain.setValueAtTime(0.15, actx.currentTime);
+        g.gain.linearRampToValueAtTime(0.01, actx.currentTime + 0.12);
+        o.connect(g); g.connect(actx.destination);
+        o.start(); o.stop(actx.currentTime + 0.12);
+      } catch(e){}
+    }
+
+    function soundScore() {
+      initSound();
+      try {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(659, actx.currentTime);
+        o.frequency.setValueAtTime(880, actx.currentTime + 0.08);
+        g.gain.setValueAtTime(0.18, actx.currentTime);
+        g.gain.linearRampToValueAtTime(0.01, actx.currentTime + 0.2);
+        o.connect(g); g.connect(actx.destination);
+        o.start(); o.stop(actx.currentTime + 0.2);
+      } catch(e){}
+    }
+
+    function soundHit() {
+      initSound();
+      try {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(140, actx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(40, actx.currentTime + 0.15);
+        g.gain.setValueAtTime(0.3, actx.currentTime);
+        g.gain.linearRampToValueAtTime(0.01, actx.currentTime + 0.15);
+        o.connect(g); g.connect(actx.destination);
+        o.start(); o.stop(actx.currentTime + 0.15);
+      } catch(e){}
+    }
+
+    /* ═══════════════════════════════════════
+       TAB SWITCHING
+       ═══════════════════════════════════════ */
+    let currentGame = 'flappy';
+    const hudScore = document.getElementById('hud-score');
+    const hudHigh = document.getElementById('hud-high');
+    const overlay = document.getElementById('screen-overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlayDesc = document.getElementById('overlay-desc');
+
+    const highscores = { flappy: 0, mole: 0, click: 0 };
+
+    function switchGame(game) {
+      currentGame = game;
+      document.querySelectorAll('.game-tab').forEach(b => b.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      document.getElementById('canvas-flappy').style.display = game === 'flappy' ? 'block' : 'none';
+      document.getElementById('mole-game').style.display = game === 'mole' ? 'flex' : 'none';
+      document.getElementById('clicker-game').style.display = game === 'click' ? 'flex' : 'none';
+
+      stopAllGames();
+      hudScore.textContent = 'คะแนน: 0';
+      hudHigh.textContent = `สูงสุด: ${highscores[game]}`;
+
+      overlay.style.display = 'flex';
+      if (game === 'flappy') {
+        overlayTitle.textContent = '🚀 ตะลุยอวกาศ';
+        overlayDesc.textContent = 'แตะหน้าจอหรือกด Spacebar เพื่อบินหลบเสาหิน';
+      } else if (game === 'mole') {
+        overlayTitle.textContent = '🐹 ตีตัวตุ่น';
+        overlayDesc.textContent = 'ตีตัวตุ่นที่โผล่ขึ้นมาให้ไวที่สุดใน 20 วินาที!';
+      } else {
+        overlayTitle.textContent = '⚡ ทดสอบความเร็วนิ้ว';
+        overlayDesc.textContent = 'รัวปุ่มให้เร็วที่สุดเท่าที่จะทำได้ใน 10 วินาที!';
+      }
+    }
+
+    function stopAllGames() {
+      cancelAnimationFrame(flappyAnim);
+      clearInterval(moleTimer);
+      clearInterval(molePopupTimer);
+      clearInterval(cpsTimerInterval);
+    }
+
+    function startGame() {
+      overlay.style.display = 'none';
+      hudScore.textContent = 'คะแนน: 0';
+      if (currentGame === 'flappy') startFlappy();
+      else if (currentGame === 'mole') startMole();
+      else if (currentGame === 'click') startCPS();
+    }
+
+    function showGameOver(score) {
+      soundHit();
+      if (score > highscores[currentGame]) {
+        highscores[currentGame] = score;
+        hudHigh.textContent = `สูงสุด: ${score}`;
+      }
+      overlay.style.display = 'flex';
+      overlayTitle.textContent = '💥 จบเกม!';
+      overlayDesc.textContent = `คุณทำคะแนนได้: ${score} แต้ม`;
+    }
+
+    /* ═══════════════════════════════════════
+       1. GAME: FLAPPY SPACE
+       ═══════════════════════════════════════ */
+    const fCanvas = document.getElementById('canvas-flappy');
+    const fCtx = fCanvas.getContext('2d');
+    let flappyAnim;
+    let ship, pipes, fScore, isFlappyRunning = false;
+
+    function resizeFlappy() {
+      fCanvas.width = fCanvas.clientWidth;
+      fCanvas.height = fCanvas.clientHeight;
+    }
+    window.addEventListener('resize', resizeFlappy);
+    setTimeout(resizeFlappy, 100);
+
+    function startFlappy() {
+      resizeFlappy();
+      ship = { x: 60, y: fCanvas.height / 2, vy: 0, gravity: 0.28, jump: -5.6, size: 16 };
+      pipes = [];
+      fScore = 0;
+      isFlappyRunning = true;
+      flappyLoop();
+    }
+
+    function flappyJump() {
+      if (!isFlappyRunning) return;
+      ship.vy = ship.jump;
+      soundJump();
+    }
+
+    fCanvas.addEventListener('pointerdown', flappyJump);
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && currentGame === 'flappy') {
+        e.preventDefault();
+        flappyJump();
+      }
+    });
+
+    function flappyLoop() {
+      // Background gradient
+      fCtx.fillStyle = '#0a0f24';
+      fCtx.fillRect(0, 0, fCanvas.width, fCanvas.height);
+
+      // Stars
+      fCtx.fillStyle = '#ffffff';
+      for (let i = 0; i < 25; i++) {
+        fCtx.fillRect((i * 47) % fCanvas.width, (i * 31) % fCanvas.height, 2, 2);
+      }
+
+      // Physics
+      ship.vy += ship.gravity;
+      ship.y += ship.vy;
+
+      // Draw Spaceship 🚀
+      fCtx.font = '26px sans-serif';
+      fCtx.textAlign = 'center';
+      fCtx.textBaseline = 'middle';
+      fCtx.fillText('🚀', ship.x, ship.y);
+
+      // Spawn pipes
+      if (pipes.length === 0 || pipes[pipes.length - 1].x < fCanvas.width - 150) {
+        const gap = 120;
+        const topH = 40 + Math.random() * (fCanvas.height - gap - 80);
+        pipes.push({ x: fCanvas.width, top: topH, bottom: topH + gap, width: 44, passed: false });
+      }
+
+      // Draw & Update Pipes
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        const p = pipes[i];
+        p.x -= 2.2;
+
+        // Pipe styles
+        fCtx.fillStyle = '#ff4757';
+        fCtx.fillRect(p.x, 0, p.width, p.top);
+        fCtx.fillRect(p.x, p.bottom, p.width, fCanvas.height - p.bottom);
+
+        // Pipe Borders
+        fCtx.fillStyle = '#ffa502';
+        fCtx.fillRect(p.x, p.top - 10, p.width, 10);
+        fCtx.fillRect(p.x, p.bottom, p.width, 10);
+
+        // Score count
+        if (!p.passed && p.x + p.width < ship.x) {
+          p.passed = true;
+          fScore++;
+          soundScore();
+          hudScore.textContent = `คะแนน: ${fScore}`;
+        }
+
+        // Collision Check
+        if (
+          ship.x + ship.size > p.x &&
+          ship.x - ship.size < p.x + p.width &&
+          (ship.y - ship.size < p.top || ship.y + ship.size > p.bottom)
+        ) {
+          isFlappyRunning = false;
+          showGameOver(fScore);
+          return;
+        }
+
+        if (p.x + p.width < 0) pipes.splice(i, 1);
+      }
+
+      // Ground or ceiling collision
+      if (ship.y < 0 || ship.y > fCanvas.height) {
+        isFlappyRunning = false;
+        showGameOver(fScore);
+        return;
+      }
+
+      flappyAnim = requestAnimationFrame(flappyLoop);
+    }
+
+    /* ═══════════════════════════════════════
+       2. GAME: WHACK A MOLE
+       ═══════════════════════════════════════ */
+    let moleScore = 0;
+    let moleTimer = null;
+    let molePopupTimer = null;
+    let moleTimeLeft = 20;
+    let currentMoleIdx = -1;
+
+    function startMole() {
+      moleScore = 0;
+      moleTimeLeft = 20;
+      hudScore.textContent = `คะแนน: 0 (${moleTimeLeft}s)`;
+      
+      clearInterval(moleTimer);
+      clearInterval(molePopupTimer);
+
+      moleTimer = setInterval(() => {
+        moleTimeLeft--;
+        hudScore.textContent = `คะแนน: ${moleScore} (${moleTimeLeft}s)`;
+        if (moleTimeLeft <= 0) {
+          clearInterval(moleTimer);
+          clearInterval(molePopupTimer);
+          hideAllMoles();
+          showGameOver(moleScore);
+        }
+      }, 1000);
+
+      popupMole();
+      molePopupTimer = setInterval(popupMole, 750);
+    }
+
+    function hideAllMoles() {
+      for (let i = 0; i < 6; i++) {
+        document.getElementById('m' + i).classList.remove('up');
+      }
+      currentMoleIdx = -1;
+    }
+
+    function popupMole() {
+      hideAllMoles();
+      const idx = Math.floor(Math.random() * 6);
+      const moleEl = document.getElementById('m' + idx);
+      moleEl.textContent = Math.random() < 0.25 ? '💣' : '🐹';
+      moleEl.classList.add('up');
+      currentMoleIdx = idx;
+    }
+
+    function hitMole(idx) {
+      if (idx !== currentMoleIdx) return;
+      const moleEl = document.getElementById('m' + idx);
+      if (!moleEl.classList.contains('up')) return;
+
+      if (moleEl.textContent === '💣') {
+        moleScore = Math.max(0, moleScore - 3);
+        soundHit();
+      } else {
+        moleScore += 1;
+        soundScore();
+      }
+      moleEl.classList.remove('up');
+      currentMoleIdx = -1;
+      hudScore.textContent = `คะแนน: ${moleScore} (${moleTimeLeft}s)`;
+    }
+
+    /* ═══════════════════════════════════════
+       3. GAME: SPEED CLICKER (CPS TEST)
+       ═══════════════════════════════════════ */
+    let cpsClicks = 0;
+    let cpsTimeLeft = 10.0;
+    let cpsTimerInterval = null;
+    let isCpsRunning = false;
+
+    function startCPS() {
+      cpsClicks = 0;
+      cpsTimeLeft = 10.0;
+      isCpsRunning = true;
+      document.getElementById('cps-timer').textContent = 'เวลาเหลือ: 10.0s';
+      hudScore.textContent = 'คลิก: 0 ครั้ง';
+
+      clearInterval(cpsTimerInterval);
+      const startTime = performance.now();
+      cpsTimerInterval = setInterval(() => {
+        const elapsed = (performance.now() - startTime) / 1000;
+        cpsTimeLeft = Math.max(0, 10.0 - elapsed);
+        document.getElementById('cps-timer').textContent = `เวลาเหลือ: ${cpsTimeLeft.toFixed(1)}s`;
+
+        if (cpsTimeLeft <= 0) {
+          clearInterval(cpsTimerInterval);
+          isCpsRunning = false;
+          const cps = (cpsClicks / 10).toFixed(1);
+          showGameOver(cpsClicks);
+          overlayDesc.textContent = `คุณคลิกได้ทั้งหมด ${cpsClicks} ครั้ง (เฉลี่ย ${cps} คลิก/วินาที 🔥)`;
+        }
+      }, 50);
+    }
+
+    function onClickCPS() {
+      if (!isCpsRunning) return;
+      cpsClicks++;
+      soundJump();
+      hudScore.textContent = `คลิก: ${cpsClicks} ครั้ง`;
+    }
+  </script>
+</body>
+</html>
